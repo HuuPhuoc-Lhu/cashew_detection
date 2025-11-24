@@ -2,22 +2,20 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 import torch
+import numpy as np
 
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="centered")
 st.title("🌿 ỨNG DỤNG KHOANH VÙNG BỆNH TRÊN LÁ ĐIỀU (YOLOv8)")
 
-
 @st.cache_resource
 def load_model():
-    detect_path = "best.pt"    # ⚠️ lưu best.pt cùng thư mục với app.py khi deploy
-
+    detect_path = "best.pt"  # ⚠️ Lưu best.pt cùng thư mục với app.py khi deploy
     try:
         detect_model = YOLO(detect_path)
         return detect_model
     except Exception as e:
         st.error(f"❌ Không thể tải mô hình khoanh vùng: {e}")
         return None
-
 
 detect_model = load_model()
 if detect_model:
@@ -31,12 +29,17 @@ if uploaded_file is not None:
 
     st.write("🔍 Đang phát hiện và khoanh vùng vùng bệnh...")
 
-    results = detect_model.predict(
-        image,
+    # Chuyển PIL Image sang numpy array
+    image_np = np.array(image)
+
+    # Gọi model trực tiếp (không dùng predict)
+    results = detect_model(
+        image_np,
         conf=0.5,
         device=0 if torch.cuda.is_available() else "cpu"
     )
 
+    # Vẽ kết quả
     result_img = results[0].plot()
 
     st.image(result_img, caption="Ảnh đã khoanh vùng bệnh", use_container_width=True)
