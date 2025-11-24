@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 2
+names: ['leaf miner', 'red rust']
+
+roboflow:
+  workspace: phc-bi
+  project: my-first-project-0gnll
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/phc-bi/my-first-project-0gnll/dataset/1
