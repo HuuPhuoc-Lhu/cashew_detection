@@ -9,8 +9,8 @@ st.title("🌿 ỨNG DỤNG KHOANH VÙNG BỆNH TRÊN LÁ ĐIỀU (YOLOv8)")
 
 # 📌 Chú thích cho từng loại bệnh
 disease_desc = {
-    "leaf_miner": "Bệnh sâu đục lá – xuất hiện các vệt trắng do sâu tấn công.",
-    "red_rust": "Bệnh rỉ sắt đỏ – xuất hiện các đốm hoặc mảng màu đỏ gỉ trên bề mặt lá.",
+    "leaf miner": "Bệnh sâu đục lá – xuất hiện các vệt trắng do sâu tấn công.",
+    "red rust": "Bệnh rỉ sắt đỏ – xuất hiện các đốm hoặc mảng màu đỏ gỉ trên bề mặt lá.",
     "healthy": "Lá khỏe mạnh – không có dấu hiệu bệnh tật.",
 }
 
