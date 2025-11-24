@@ -59,7 +59,7 @@ if uploaded_file is not None:
     # =====================  NO DISEASE => HEALTHY  ===========================
     if boxes is None or len(boxes) == 0:
         st.subheader("📘 Kết luận:")
-        st.success("🌱 Lá khỏe mạnh (healthy) – Không phát hiện dấu hiệu bệnh.")
+        st.success("🌱 Lá khỏe mạnh (healthy) Không phát hiện dấu hiệu bệnh.")
 
         st.markdown(f"**🔹 healthy**: {disease_desc['healthy']}")
     else:
