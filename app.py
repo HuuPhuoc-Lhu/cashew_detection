@@ -27,7 +27,7 @@ uploaded_file = st.file_uploader("📤 Tải lên ảnh lá điều", type=["jpg
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Ảnh gốc", use_container_width=True)
+    st.image(image, caption="Ảnh gốc", width='stretch')
 
     st.write("🔍 Đang phát hiện và khoanh vùng vùng bệnh...")
 
@@ -39,7 +39,7 @@ if uploaded_file is not None:
 
     result_img = results[0].plot()
 
-    st.image(result_img, caption="Ảnh đã khoanh vùng bệnh", use_container_width=True)
+    st.image(result_img, caption="Ảnh đã khoanh vùng bệnh", width='stretch')
 
 else:
     st.info("⬆️ Hãy tải lên 1 ảnh để bắt đầu dự đoán.")
