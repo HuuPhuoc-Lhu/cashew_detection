@@ -9,6 +9,10 @@ st.title("🌿 ỨNG DỤNG KHOANH VÙNG BỆNH TRÊN LÁ ĐIỀU (YOLOv8)")
 
 # ================== THÔNG TIN BỆNH ==================
 disease_info = {
+    "healthy": {
+        "description": "Lá khoẻ mạnh, không có dấu hiệu bệnh.",
+        "treatment": "- Không cần xử lý.\n- Duy trì chăm sóc bình thường."
+    },
     "leaf miner": {
         "description": "Sâu đục lá tạo đường hầm ngoằn ngoèo làm lá vàng và giảm quang hợp.",
         "treatment": "- Cắt bỏ lá bị nặng.\n- Dùng bẫy pheromone.\n- Phun thuốc sinh học chứa Abamectin hoặc Spinosad."
@@ -17,10 +21,7 @@ disease_info = {
         "description": "Bệnh rỉ sắt gây các đốm màu đỏ–cam, làm lá vàng và giảm năng suất.",
         "treatment": "- Cắt tỉa lá bệnh.\n- Tăng thông thoáng vườn.\n- Phun Copper Oxychloride hoặc Mancozeb."
     },
-    "healthy": {
-        "description": "Lá khoẻ mạnh, không có dấu hiệu bệnh.",
-        "treatment": "- Không cần xử lý.\n- Duy trì chăm sóc bình thường."
-    }
+    
 }
 
 

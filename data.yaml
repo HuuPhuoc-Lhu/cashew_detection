@@ -2,12 +2,12 @@ train: ../train/images
 val: ../valid/images
 test: ../test/images
 
-nc: 2
-names: ['leaf miner', 'red rust']
+nc: 3
+names: ['healthy', 'leaf miner', 'red rust']
 
 roboflow:
-  workspace: phc-bi
-  project: my-first-project-0gnll
-  version: 1
+  workspace: ptud-qjfuo
+  project: ptud-j2oiy
+  version: 5
   license: CC BY 4.0
-  url: https://universe.roboflow.com/phc-bi/my-first-project-0gnll/dataset/1
+  url: https://universe.roboflow.com/ptud-qjfuo/ptud-j2oiy/dataset/5
