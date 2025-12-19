@@ -67,7 +67,7 @@ if uploaded_file and model:
     with col1:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📷 Ảnh gốc")
-        st.image(image, width='content')
+        st.image(image, width='stretch')
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.write("🔍 Đang phát hiện và khoanh vùng vùng bệnh...")
@@ -78,7 +78,7 @@ if uploaded_file and model:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
 
         st.subheader("🧠 Kết quả phát hiện")
-        st.image(result_img, width='content')
+        st.image(result_img, width='stretch')
         st.markdown("</div>", unsafe_allow_html=True)
 
     boxes = results[0].boxes
