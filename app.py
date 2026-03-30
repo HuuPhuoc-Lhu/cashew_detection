@@ -22,7 +22,6 @@ body { background-color: #f6f8fa; }
     backdrop-filter: blur(8px); /* mờ nhẹ nền phía sau */
     padding: 1.2rem;
     border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     margin-bottom: 1rem;
 }
 

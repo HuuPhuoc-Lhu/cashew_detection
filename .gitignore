@@ -1,0 +1,9 @@
+echo "__pycache__/
+*.pyc
+venv/
+runs/
+train/
+valid/
+test/
+*.pt
+*.txt" > .gitignore
