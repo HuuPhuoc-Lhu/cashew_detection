@@ -1,106 +1,103 @@
 import streamlit as st
 from PIL import Image
+import google.generativeai as genai
 from backend import predict_image, load_model
 
-# ================== PAGE CONFIG & UI STYLE ==================
+# ================== 1. CONFIG TRANG (BẮT BUỘC Ở DÒNG ĐẦU TIÊN) ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
+
+# ================== 2. CẤU HÌNH GẮN CỨNG API KEY (TEST) ==================
+# Dán API Key của bạn vào dấu ngoặc kép dưới đây
+MY_API_KEY = "AIzaSyAVBOKLO0c__YqVvkjJlkQgqJaWwUi53Os"
+
+try:
+    genai.configure(api_key="AIzaSyAVBOKLO0c__YqVvkjJlkQgqJaWwUi53Os")
+    # Sử dụng bản gemini-1.5-flash (Bản mới nhất, cực nhanh và miễn phí)
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    st.sidebar.success("🤖 Gemini 1.5 Flash: Online")
+except Exception as e:
+    st.sidebar.error(f"❌ Lỗi cấu hình AI: {e}")
+
+# ================== 3. GIAO DIỆN (UI STYLE) ==================
 st.markdown("""
 <style>
-body { background-color: #f6f8fa; }
-.block-container { padding-top: 2rem; }
-
-.card { 
-    background-color: rgba(255, 255, 255, 0); /* trong suốt hoàn toàn */
-    padding: 1.2rem; 
-    border-radius: 14px; 
-    box-shadow: none; /* loại bỏ shadow */
-    margin-bottom: 1rem; 
-}
-
-.card-blur {
-    background-color: rgba(255, 255, 255, 0.1); /* 10% màu trắng */
-    backdrop-filter: blur(8px); /* mờ nhẹ nền phía sau */
-    padding: 1.2rem;
-    border-radius: 14px;
-    margin-bottom: 1rem;
-}
-
-.header-title { text-align: center; color: #2e7d32; font-size: 36px; font-weight: 700; }
-.header-sub { text-align: center; color: #555; margin-bottom: 2rem; }
+    .header-title { text-align: center; color: #2e7d32; font-size: 36px; font-weight: 700; }
+    .header-sub { text-align: center; color: #555; margin-bottom: 2rem; }
+    .card-result { 
+        background-color: #ffffff; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border-left: 5px solid #2e7d32;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+    }
 </style>
-
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="header-title">🌿 Cashew Leaf Disease Detection</div>', unsafe_allow_html=True)
-st.markdown('<div class="header-sub">Ứng dụng AI khoanh vùng và nhận dạng bệnh trên lá điều bằng YOLOv8</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-sub">Hệ thống nhận diện bệnh lá điều thông minh (YOLOv8 + Gemini AI)</div>', unsafe_allow_html=True)
 
-# ================== DISEASE INFO ==================
-disease_info = {
-    "healthy": {"description": "Lá khoẻ mạnh, không có dấu hiệu bệnh.", "treatment": "- Không cần xử lý.\n- Duy trì chăm sóc bình thường."},
-    "leaf miner": {"description": "Sâu đục lá tạo đường hầm ngoằn ngoèo làm lá vàng và giảm quang hợp.", "treatment": "- Cắt bỏ lá bị nặng.\n- Dùng bẫy pheromone.\n- Phun thuốc sinh học chứa Abamectin hoặc Spinosad."},
-    "red rust": {"description": "Bệnh rỉ sắt gây các đốm màu đỏ–cam, làm lá vàng và giảm năng suất.", "treatment": "- Cắt tỉa lá bệnh.\n- Tăng thông thoáng vườn.\n- Phun Copper Oxychloride hoặc Mancozeb."},
-}
+# ================== 4. TẢI MÔ HÌNH YOLOv8 ==================
+yolo_model = load_model()
 
-# ================== LOAD MODEL ==================
-model = load_model()
-if model:
-    st.success("✅ Mô hình YOLOv8 đã được tải thành công")
+# ================== 5. THANH SIDEBAR ==================
+st.sidebar.header("⚙️ Tùy chỉnh")
+conf_thres = st.sidebar.slider("Độ tin cậy (Confidence)", 0.1, 1.0, 0.35)
 
-# ================== SIDEBAR CONFIG ==================
-st.sidebar.header("⚙️ Cấu hình dự đoán")
-conf_thres = st.sidebar.slider("Ngưỡng độ tin cậy (Confidence)", min_value=0.2, max_value=0.7, value=0.35, step=0.05)
-resize_enable = st.sidebar.checkbox("Chuẩn hóa ảnh (khuyên dùng cho mobile)", value=True)
+# ================== 6. XỬ LÝ UPLOAD VÀ DỰ ĐOÁN ==================
+uploaded_file = st.file_uploader("📤 Tải lên ảnh lá điều để phân tích", type=["jpg", "jpeg", "png"])
 
-# ================== UPLOAD IMAGE ==================
-uploaded_file = st.file_uploader("📤 Tải lên ảnh lá điều", type=["jpg", "jpeg", "png"])
-
-if uploaded_file and model:
-    col1, col2 = st.columns(2)
+if uploaded_file and yolo_model:
     image = Image.open(uploaded_file)
-    if resize_enable:
-        max_w = 1024
-        if image.width > max_w:
-            new_h = int(image.height * max_w / image.width)
-            image = image.resize((max_w, new_h))
-
+    
+    col1, col2 = st.columns(2)
+    
     with col1:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📷 Ảnh gốc")
-        st.image(image, width='stretch')
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.image(image, use_container_width=True)
 
-    st.write("🔍 Đang phát hiện và khoanh vùng vùng bệnh...")
-    results = predict_image(image, conf=conf_thres)
-    result_img = results[0].plot()
+    # Chạy YOLOv8
+    with st.spinner("🔍 Đang quét vùng bệnh..."):
+        results = predict_image(image, conf=conf_thres)
+        result_img = results[0].plot()
 
     with col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🧠 Kết quả AI quét")
+        st.image(result_img, use_container_width=True)
 
-        st.subheader("🧠 Kết quả phát hiện")
-        st.image(result_img, width='stretch')
-        st.markdown("</div>", unsafe_allow_html=True)
-
+    # Phân tích kết quả từ YOLO để gửi cho Gemini
     boxes = results[0].boxes
-    class_names = model.names
-    if boxes is None or len(boxes) == 0:
-        st.info("✔ Không phát hiện bệnh nào trên lá.")
-    else:
-        for i, box in enumerate(boxes):
-            cls_id = int(box.cls[0])
-            cls_name = class_names[cls_id]
-            conf_val = float(box.conf[0]) * 100
-            level = "🟢 Rất cao" if conf_val>=75 else "🟡 Trung bình" if conf_val>=50 else "🔴 Thấp"
-            st.markdown(f"""
-            <div class="card">
-                <h4>🟩 Vùng {i+1}</h4>
-                <b>Bệnh:</b> {cls_name}<br>
-                <b>Độ tin cậy:</b> {conf_val:.2f}% — {level}<br><br>
-                <b>📌 Mô tả:</b><br>{disease_info.get(cls_name, {}).get('description','')}<br><br>
-                <b>🛠 Cách xử lý:</b><br>{disease_info.get(cls_name, {}).get('treatment','')}
-            </div>
-            """, unsafe_allow_html=True)
-else:
-    st.info("⬆️ Hãy tải lên 1 ảnh lá điều để bắt đầu dự đoán.")
+    if boxes is not None and len(boxes) > 0:
+        st.divider()
+        st.subheader("📝 Phân tích chi tiết & Tư vấn điều trị")
+        
+        # Lấy danh sách tên các bệnh phát hiện được (loại bỏ trùng lặp)
+        detected_diseases = list(set([yolo_model.names[int(b.cls[0])] for b in boxes]))
+        disease_list_str = ", ".join(detected_diseases)
 
+        # Hiển thị tóm tắt
+        st.warning(f"Phát hiện dấu hiệu của: **{disease_list_str}**")
+
+        # Nút gọi Gemini tư vấn
+        if st.button("✨ Nhận lời khuyên từ Chuyên gia Gemini"):
+            with st.spinner("Gemini đang phân tích bệnh trạng..."):
+                # Tạo prompt thông minh gửi cho Gemini
+                prompt = f"""
+                Với tư cách là một chuyên gia nông nghiệp, hãy phân tích và đưa ra giải pháp cho cây điều khi lá bị các triệu chứng sau: {disease_list_str}.
+                Yêu cầu: 
+                1. Giải thích ngắn gọn nguyên nhân.
+                2. Đưa ra các bước xử lý (hóa học hoặc sinh học).
+                3. Cách phòng ngừa cho cả vườn.
+                Trả lời bằng tiếng Việt, trình bày rõ ràng bằng bullet points.
+                """
+                try:
+                    response = gemini_model.generate_content(prompt)
+                    st.markdown(f'<div class="card-result">{response.text}</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Không thể kết nối Gemini: {e}")
+    else:
+        st.success("✅ Tuyệt vời! Không phát hiện dấu hiệu bệnh lý trên lá này.")
+
+# ================== 7. FOOTER ==================
 st.markdown("---")
-st.caption("Phát triển bởi 🧠 Bạn • Mô hình: YOLOv8n • Framework: Streamlit 🚀")
+st.caption("Ứng dụng chạy trên GitHub Codespaces • Kết nối Google AI Studio")

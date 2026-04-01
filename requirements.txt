@@ -7,3 +7,4 @@ opencv-python-headless==4.7.0.72
 Pillow
 matplotlib
 tqdm
+google-generativeai==0.3.2
