@@ -54,7 +54,7 @@ if GEMINI_OK:
 else:
     st.sidebar.warning("⚠️ Gemini: Offline (fallback mode)")
 
-conf_thres = st.sidebar.slider("Độ tin cậy", 0.1, 1.0, 0.35)
+conf_thres = 0.60
 
 # ================== LOAD YOLO ==================
 yolo_model = load_model()
