@@ -2,21 +2,23 @@ import streamlit as st
 from PIL import Image
 import google.generativeai as genai
 from backend import predict_image, load_model
+import os
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
 
+load_dotenv()
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+try:
+    gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+    st.sidebar.success("🤖 Gemini: Online")
+except Exception as e:
+    st.sidebar.error(f"❌ Lỗi AI: {e}")
 # ================== 1. CONFIG TRANG (BẮT BUỘC Ở DÒNG ĐẦU TIÊN) ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
 
-# ================== 2. CẤU HÌNH GẮN CỨNG API KEY (TEST) ==================
-# Dán API Key của bạn vào dấu ngoặc kép dưới đây
-MY_API_KEY = "AIzaSyAVBOKLO0c__YqVvkjJlkQgqJaWwUi53Os"
-
-try:
-    genai.configure(api_key="AIzaSyAVBOKLO0c__YqVvkjJlkQgqJaWwUi53Os")
-    # Sử dụng bản gemini-1.5-flash (Bản mới nhất, cực nhanh và miễn phí)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-    st.sidebar.success("🤖 Gemini 1.5 Flash: Online")
-except Exception as e:
-    st.sidebar.error(f"❌ Lỗi cấu hình AI: {e}")
 
 # ================== 3. GIAO DIỆN (UI STYLE) ==================
 st.markdown("""
