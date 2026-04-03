@@ -8,3 +8,4 @@ Pillow
 matplotlib
 tqdm
 google-generativeai==0.3.2
+python-dotenv
