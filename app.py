@@ -7,7 +7,14 @@ import cloudinary.uploader
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from ultralytics import YOLO
+import streamlit as st
 
+@st.cache_resource
+def load_yolo():
+    return YOLO("yolov8n.pt")  
+
+yolo_model = load_yolo()
 # ================== CONFIG PAGE ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
 
