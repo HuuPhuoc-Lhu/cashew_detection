@@ -93,7 +93,7 @@ if GEMINI_OK:
 else:
     st.sidebar.warning("⚠️ Gemini: Offline")
 
-conf_thres = st.sidebar.slider("Độ tin cậy", 0.1, 1.0, 0.35)
+conf_thres = 0.65
 
 # ================== LOAD MODEL ==================
 yolo_model = load_model()
@@ -108,7 +108,7 @@ if uploaded_file and yolo_model:
 
     with col1:
         st.subheader("📷 Ảnh gốc")
-        st.image(image, use_container_width=True)
+        st.image(image, width='stretch')
 
     # ===== YOLO =====
     with st.spinner("🔍 Đang quét bệnh..."):
@@ -117,7 +117,7 @@ if uploaded_file and yolo_model:
 
     with col2:
         st.subheader("🧠 Kết quả")
-        st.image(result_img, use_container_width=True)
+        st.image(result_img, width='stretch')
 
     boxes = results[0].boxes
 
