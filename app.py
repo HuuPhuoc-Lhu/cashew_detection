@@ -46,7 +46,7 @@ def save_log(user, diseases, image_url):
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         user,
         ", ".join(diseases),
-        f'=IMAGE("{image_url}",3)'
+        f'=IMAGE("{image_url}";3)'
     ],
      value_input_option="USER_ENTERED"
     )
