@@ -5,6 +5,20 @@ from backend import predict_image, load_model
 import os
 from dotenv import load_dotenv
 
+# ================== FALLBACK ==================
+def generate_fallback(diseases):
+    return f"""
+📌 **Gợi ý xử lý (offline AI)**
+
+- Bệnh phát hiện: {", ".join(diseases)}
+- Cắt bỏ lá bị nhiễm nặng
+- Phun thuốc sinh học (nano đồng, neem oil)
+- Giữ vườn thông thoáng, tránh ẩm cao
+- Theo dõi 5–7 ngày để đánh giá lại
+
+👉 Khuyến nghị: kết hợp xử lý sớm để tránh lan rộng
+"""
+
 # ================== LOAD ENV ==================
 load_dotenv()
 
@@ -31,7 +45,6 @@ st.markdown("""
     .header-title { text-align: center; color: #2e7d32; font-size: 36px; font-weight: 700; }
     .header-sub { text-align: center; color: #555; margin-bottom: 2rem; }
     .card-result { 
-       .card-result { 
     background-color: #ffffff; 
     color: #000000;  /* thêm dòng này */
         padding: 15px; 
@@ -127,19 +140,6 @@ if uploaded_file and yolo_model:
 
     else:
         st.success("✅ Không phát hiện bệnh")
-# ================== FALLBACK ==================
-def generate_fallback(diseases):
-    return f"""
-📌 **Gợi ý xử lý (offline AI)**
-
-- Bệnh phát hiện: {", ".join(diseases)}
-- Cắt bỏ lá bị nhiễm nặng
-- Phun thuốc sinh học (nano đồng, neem oil)
-- Giữ vườn thông thoáng, tránh ẩm cao
-- Theo dõi 5–7 ngày để đánh giá lại
-
-👉 Khuyến nghị: kết hợp xử lý sớm để tránh lan rộng
-"""
 
 
 # ================== FOOTER ==================
