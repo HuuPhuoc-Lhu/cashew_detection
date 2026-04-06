@@ -127,7 +127,6 @@ if uploaded_file and yolo_model:
 
     else:
         st.success("✅ Không phát hiện bệnh")
-
 # ================== FALLBACK ==================
 def generate_fallback(diseases):
     return f"""
@@ -141,6 +140,7 @@ def generate_fallback(diseases):
 
 👉 Khuyến nghị: kết hợp xử lý sớm để tránh lan rộng
 """
+
 
 # ================== FOOTER ==================
 st.markdown("---")
