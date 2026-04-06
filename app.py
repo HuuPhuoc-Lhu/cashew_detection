@@ -170,7 +170,7 @@ if uploaded_file and yolo_model:
                 )
 
             st.success("✅ Đã lưu thành công!")
-            st.write("🔗 Link:", image_url)
+            st.write("🔗 Link":"https://docs.google.com/spreadsheets/d/1OdFoEcEkpB0S468oEAH7jU31bZLAnc2m_OHMXvjHtTY/edit?usp=sharing")
 
     else:
         st.success("✅ Không phát hiện bệnh")
