@@ -2,8 +2,67 @@ import streamlit as st
 from PIL import Image
 import google.generativeai as genai
 from backend import predict_image, load_model
-import os
-from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
+from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# ================== CONFIG PAGE ==================
+st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
+
+# ================== GEMINI ==================
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+    GEMINI_OK = True
+except:
+    GEMINI_OK = False
+
+# ================== CLOUDINARY ==================
+cloudinary.config(
+    cloud_name=st.secrets["CLOUD_NAME"],
+    api_key=st.secrets["API_KEY"],
+    api_secret=st.secrets["API_SECRET"]
+)
+
+# ================== GOOGLE SHEETS ==================
+def save_log(user, diseases, image_url):
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds_dict = st.secrets["gcp"]
+
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(
+        creds_dict, scope
+    )
+
+    client = gspread.authorize(creds)
+    sheet = client.open("cashew_log").sheet1
+
+    sheet.append_row([
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        user,
+        ", ".join(diseases),
+        image_url
+    ])
+
+# ================== UPLOAD CLOUDINARY ==================
+def upload_to_cloudinary(image_np, user="guest"):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    temp_path = f"temp_{timestamp}.jpg"
+    Image.fromarray(image_np).save(temp_path)
+
+    result = cloudinary.uploader.upload(
+        temp_path,
+        folder=f"cashew/{user}",
+        public_id=timestamp
+    )
+
+    return result["secure_url"]
 
 # ================== FALLBACK ==================
 def generate_fallback(diseases):
@@ -14,66 +73,30 @@ def generate_fallback(diseases):
 - Cắt bỏ lá bị nhiễm nặng
 - Phun thuốc sinh học (nano đồng, neem oil)
 - Giữ vườn thông thoáng, tránh ẩm cao
-- Theo dõi 5–7 ngày để đánh giá lại
+- Theo dõi 5–7 ngày
 
-👉 Khuyến nghị: kết hợp xử lý sớm để tránh lan rộng
+👉 Xử lý sớm để tránh lan rộng
 """
 
-# ================== LOAD ENV ==================
-load_dotenv()
-
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-if API_KEY:
-    genai.configure(api_key=API_KEY)
-    try:
-        gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-        GEMINI_OK = True
-    except Exception:
-        gemini_model = None
-        GEMINI_OK = False
-else:
-    gemini_model = None
-    GEMINI_OK = False
-
-# ================== CONFIG PAGE ==================
-st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
-
 # ================== UI ==================
-st.markdown("""
-<style>
-    .header-title { text-align: center; color: #2e7d32; font-size: 36px; font-weight: 700; }
-    .header-sub { text-align: center; color: #555; margin-bottom: 2rem; }
-    .card-result { 
-    background-color: #ffffff; 
-    color: #000000;  /* thêm dòng này */
-        padding: 15px; 
-        border-radius: 10px; 
-        border-left: 5px solid #2e7d32;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        margin-bottom: 10px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="header-title">🌿 Cashew Leaf Disease Detection</div>', unsafe_allow_html=True)
-st.markdown('<div class="header-sub">YOLOv8 + Gemini 2.5 Flash</div>', unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;color:#2e7d32'>🌿 Cashew Leaf Disease Detection</h1>", unsafe_allow_html=True)
+st.caption("YOLOv8 + Gemini + Cloudinary + Google Sheets")
 
 # ================== SIDEBAR ==================
 st.sidebar.header("⚙️ Tùy chỉnh")
 
 if GEMINI_OK:
-    st.sidebar.success("🤖 Gemini 2.5: Online")
+    st.sidebar.success("🤖 Gemini: Online")
 else:
-    st.sidebar.warning("⚠️ Gemini: Offline (fallback mode)")
+    st.sidebar.warning("⚠️ Gemini: Offline")
 
-conf_thres = 0.60
+conf_thres = st.sidebar.slider("Độ tin cậy", 0.1, 1.0, 0.35)
 
-# ================== LOAD YOLO ==================
+# ================== LOAD MODEL ==================
 yolo_model = load_model()
 
 # ================== UPLOAD ==================
-uploaded_file = st.file_uploader("📤 Tải ảnh lá điều", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("📤 Tải ảnh lá điều", type=["jpg","jpeg","png"])
 
 if uploaded_file and yolo_model:
     image = Image.open(uploaded_file)
@@ -82,16 +105,16 @@ if uploaded_file and yolo_model:
 
     with col1:
         st.subheader("📷 Ảnh gốc")
-        st.image(image, width='stretch')
+        st.image(image, use_container_width=True)
 
-    # YOLO predict
+    # ===== YOLO =====
     with st.spinner("🔍 Đang quét bệnh..."):
         results = predict_image(image, conf=conf_thres)
         result_img = results[0].plot()
 
     with col2:
         st.subheader("🧠 Kết quả")
-        st.image(result_img, width='stretch')
+        st.image(result_img, use_container_width=True)
 
     boxes = results[0].boxes
 
@@ -99,49 +122,56 @@ if uploaded_file and yolo_model:
         st.divider()
         st.subheader("📝 Phân tích & Tư vấn")
 
-        detected_diseases = list(set([yolo_model.names[int(b.cls[0])] for b in boxes]))
-        disease_list_str = ", ".join(detected_diseases)
+        detected = list(set([
+            yolo_model.names[int(b.cls[0])] for b in boxes
+        ]))
 
-        st.warning(f"Phát hiện: **{disease_list_str}**")
+        st.warning(f"Phát hiện: **{', '.join(detected)}**")
 
+        # ===== GEMINI =====
         if st.button("✨ Nhận tư vấn AI"):
             with st.spinner("Đang phân tích..."):
-
-                prompt = f"""
-                Bạn là chuyên gia nông nghiệp.
-                Cây điều có các bệnh: {disease_list_str}
-
-                Hãy:
-                1. Giải thích nguyên nhân ngắn gọn
-                2. Đưa ra cách xử lý
-                3. Cách phòng ngừa
-
-                Trả lời bằng tiếng Việt, dạng bullet.
-                """
-
-                # ================== GEMINI ==================
                 if GEMINI_OK:
                     try:
+                        prompt = f"""
+                        Bạn là chuyên gia nông nghiệp.
+
+                        Cây điều bị: {', '.join(detected)}
+
+                        1. Nguyên nhân
+                        2. Cách xử lý
+                        3. Phòng ngừa
+
+                        Trả lời ngắn gọn dạng bullet.
+                        """
+
                         response = gemini_model.generate_content(prompt)
-                        st.markdown(f'<div class="card-result">{response.text}</div>', unsafe_allow_html=True)
+                        st.success("📊 Kết quả AI")
+                        st.write(response.text)
 
                     except Exception as e:
-                        if "429" in str(e):
-                            st.error("🚫 Hết quota Gemini → dùng fallback")
-                        else:
-                            st.error(f"Lỗi Gemini: {e}")
-
-                        # fallback
-                        st.info(generate_fallback(detected_diseases))
-
+                        st.error("🚫 Lỗi Gemini → dùng fallback")
+                        st.info(generate_fallback(detected))
                 else:
-                    # fallback luôn nếu Gemini off
-                    st.info(generate_fallback(detected_diseases))
+                    st.info(generate_fallback(detected))
+
+        # ===== SAVE =====
+        if st.button("💾 Lưu kết quả"):
+            with st.spinner("Đang lưu..."):
+                image_url = upload_to_cloudinary(result_img)
+
+                save_log(
+                    user="guest",
+                    diseases=detected,
+                    image_url=image_url
+                )
+
+            st.success("✅ Đã lưu thành công!")
+            st.write("🔗 Link:", image_url)
 
     else:
         st.success("✅ Không phát hiện bệnh")
 
-
 # ================== FOOTER ==================
 st.markdown("---")
-st.caption("YOLOv8 + Gemini 2.5 Flash • Có fallback khi lỗi API")
+st.caption("YOLOv8 + Gemini 2.5 Flash • Deploy bằng Streamlit Cloud")
