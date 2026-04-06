@@ -46,8 +46,11 @@ def save_log(user, diseases, image_url):
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         user,
         ", ".join(diseases),
-        image_url
-    ])
+        f'=IMAGE("{image_url}",3)'
+    ],
+     value_input_option="USER_ENTERED"
+    )
+    
 
 # ================== UPLOAD CLOUDINARY ==================
 def upload_to_cloudinary(image_np, user="guest"):
