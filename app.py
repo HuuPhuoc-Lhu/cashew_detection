@@ -1,24 +1,12 @@
-import os
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-
 import streamlit as st
-from PIL import Image, ImageDraw
+from PIL import Image
 import google.generativeai as genai
-from backend import predict_image
+from backend import predict_image, load_model
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from ultralytics import YOLO
-
-# ================== LOAD YOLO ==================
-@st.cache_resource
-def load_yolo():
-    return YOLO("yolov8n.pt")
-
-yolo_model = load_yolo()
 
 # ================== CONFIG PAGE ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
@@ -45,8 +33,10 @@ def save_log(user, diseases, image_url):
         "https://www.googleapis.com/auth/drive"
     ]
 
+    creds_dict = st.secrets["gcp"]
+
     creds = ServiceAccountCredentials.from_json_keyfile_dict(
-        st.secrets["gcp"], scope
+        creds_dict, scope
     )
 
     client = gspread.authorize(creds)
@@ -56,15 +46,18 @@ def save_log(user, diseases, image_url):
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         user,
         ", ".join(diseases),
-        f'=IMAGE("{image_url}", 3)'
-    ], value_input_option="USER_ENTERED")
+        f'=IMAGE("{image_url}";3)'
+    ],
+     value_input_option="USER_ENTERED"
+    )
+    
 
-# ================== CLOUDINARY UPLOAD ==================
-def upload_to_cloudinary(image_pil, user="guest"):
+# ================== UPLOAD CLOUDINARY ==================
+def upload_to_cloudinary(image_np, user="guest"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     temp_path = f"temp_{timestamp}.jpg"
-    image_pil.save(temp_path)
+    Image.fromarray(image_np).save(temp_path)
 
     result = cloudinary.uploader.upload(
         temp_path,
@@ -74,99 +67,114 @@ def upload_to_cloudinary(image_pil, user="guest"):
 
     return result["secure_url"]
 
-# ================== DRAW BOXES (NO CV2) ==================
-def draw_boxes(image, results, model):
-    draw = ImageDraw.Draw(image)
-
-    boxes = results[0].boxes
-    if boxes is None:
-        return image
-
-    for box in boxes:
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        cls = int(box.cls[0])
-        label = model.names[cls]
-
-        draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
-        draw.text((x1, y1), label, fill="red")
-
-    return image
-
 # ================== FALLBACK ==================
 def generate_fallback(diseases):
     return f"""
-📌 **Gợi ý xử lý**
+📌 **Gợi ý xử lý (offline AI)**
 
-- Bệnh: {", ".join(diseases)}
-- Cắt bỏ lá bệnh
-- Phun neem oil / nano đồng
-- Giữ vườn khô thoáng
+- Bệnh phát hiện: {", ".join(diseases)}
+- Cắt bỏ lá bị nhiễm nặng
+- Phun thuốc sinh học (nano đồng, neem oil)
+- Giữ vườn thông thoáng, tránh ẩm cao
+- Theo dõi 5–7 ngày
+
+👉 Xử lý sớm để tránh lan rộng
 """
 
 # ================== UI ==================
 st.markdown("<h1 style='text-align:center;color:#2e7d32'>🌿 Cashew Leaf Disease Detection</h1>", unsafe_allow_html=True)
+st.caption("YOLOv8 + Gemini + Cloudinary + Google Sheets")
 
+# ================== SIDEBAR ==================
 st.sidebar.header("⚙️ Tùy chỉnh")
 
 if GEMINI_OK:
-    st.sidebar.success("🤖 Gemini Online")
+    st.sidebar.success("🤖 Gemini: Online")
 else:
-    st.sidebar.warning("⚠️ Gemini Offline")
+    st.sidebar.warning("⚠️ Gemini: Offline")
 
 conf_thres = st.sidebar.slider("Độ tin cậy", 0.1, 1.0, 0.35)
 
-uploaded_file = st.file_uploader("📤 Tải ảnh", type=["jpg","png","jpeg"])
+# ================== LOAD MODEL ==================
+yolo_model = load_model()
 
-# ================== MAIN ==================
-if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
+# ================== UPLOAD ==================
+uploaded_file = st.file_uploader("📤 Tải ảnh lá điều", type=["jpg","jpeg","png"])
+
+if uploaded_file and yolo_model:
+    image = Image.open(uploaded_file)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.image(image, caption="Ảnh gốc")
+        st.subheader("📷 Ảnh gốc")
+        st.image(image, use_container_width=True)
 
     # ===== YOLO =====
-    with st.spinner("🔍 Đang quét..."):
-        image_resized = image.resize((320, 320))
-        results = predict_image(yolo_model, image_resized, conf=conf_thres)
-        result_img = draw_boxes(image_resized.copy(), results, yolo_model)
+    with st.spinner("🔍 Đang quét bệnh..."):
+        results = predict_image(image, conf=conf_thres)
+        result_img = results[0].plot()
 
     with col2:
-        st.image(result_img, caption="Kết quả")
+        st.subheader("🧠 Kết quả")
+        st.image(result_img, use_container_width=True)
 
     boxes = results[0].boxes
 
     if boxes is not None and len(boxes) > 0:
+        st.divider()
+        st.subheader("📝 Phân tích & Tư vấn")
+
         detected = list(set([
             yolo_model.names[int(b.cls[0])] for b in boxes
         ]))
 
-        st.warning(f"Phát hiện: {', '.join(detected)}")
+        st.warning(f"Phát hiện: **{', '.join(detected)}**")
 
         # ===== GEMINI =====
-        if st.button("✨ Tư vấn AI"):
-            if GEMINI_OK:
-                try:
-                    prompt = f"Cây điều bị: {', '.join(detected)}. Cách xử lý?"
-                    res = gemini_model.generate_content(prompt)
-                    st.write(res.text)
-                except:
+        if st.button("✨ Nhận tư vấn AI"):
+            with st.spinner("Đang phân tích..."):
+                if GEMINI_OK:
+                    try:
+                        prompt = f"""
+                        Bạn là chuyên gia nông nghiệp.
+
+                        Cây điều bị: {', '.join(detected)}
+
+                        1. Nguyên nhân
+                        2. Cách xử lý
+                        3. Phòng ngừa
+
+                        Trả lời ngắn gọn dạng bullet.
+                        """
+
+                        response = gemini_model.generate_content(prompt)
+                        st.success("📊 Kết quả AI")
+                        st.write(response.text)
+
+                    except Exception as e:
+                        st.error("🚫 Lỗi Gemini → dùng fallback")
+                        st.info(generate_fallback(detected))
+                else:
                     st.info(generate_fallback(detected))
-            else:
-                st.info(generate_fallback(detected))
 
         # ===== SAVE =====
-        if st.button("💾 Lưu"):
+        if st.button("💾 Lưu kết quả"):
             with st.spinner("Đang lưu..."):
-                url = upload_to_cloudinary(result_img)
-                save_log("guest", detected, url)
+                image_url = upload_to_cloudinary(result_img)
 
-            st.success("Đã lưu!")
-            st.write(url)
+                save_log(
+                    user="guest",
+                    diseases=detected,
+                    image_url=image_url
+                )
+
+            st.success("✅ Đã lưu thành công!")
+            st.write("🔗 Link:", image_url)
 
     else:
-        st.success("Không phát hiện bệnh")
+        st.success("✅ Không phát hiện bệnh")
 
+# ================== FOOTER ==================
 st.markdown("---")
-st.caption("Lite YOLO • Streamlit Cloud Ready 🚀")
+st.caption("YOLOv8 + Gemini 2.5 Flash • Deploy bằng Streamlit Cloud")
