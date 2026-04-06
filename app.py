@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 import google.generativeai as genai
-from backend import predict_image, load_model
+from backend import predict_image
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime
@@ -9,7 +9,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from ultralytics import YOLO
 import streamlit as st
+import os
 
+os.environ["OMP_NUM_THREADS"] = "1"
 @st.cache_resource
 def load_yolo():
     return YOLO("yolov8n.pt")  
@@ -101,9 +103,6 @@ else:
     st.sidebar.warning("⚠️ Gemini: Offline")
 
 conf_thres = st.sidebar.slider("Độ tin cậy", 0.1, 1.0, 0.35)
-
-# ================== LOAD MODEL ==================
-yolo_model = load_model()
 
 # ================== UPLOAD ==================
 uploaded_file = st.file_uploader("📤 Tải ảnh lá điều", type=["jpg","jpeg","png"])
