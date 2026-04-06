@@ -12,6 +12,7 @@ import streamlit as st
 import os
 
 os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
 @st.cache_resource
 def load_yolo():
     return YOLO("yolov8n.pt")  
