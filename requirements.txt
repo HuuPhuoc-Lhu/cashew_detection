@@ -9,3 +9,6 @@ matplotlib
 tqdm
 google-generativeai==0.3.2
 python-dotenv
+cloudinary
+gspread
+oauth2client
