@@ -132,16 +132,16 @@ if uploaded_file and yolo_model:
         st.divider()
         st.subheader("📝 Phân tích & Tư vấn")
 
-       detected_info = []
+        detected_info = []
 
         for b in boxes:
-        cls_id = int(b.cls[0])
-        conf = float(b.conf[0])
-    
-        name_en = yolo_model.names[cls_id]
-        name_vi = disease_vi.get(name_en, name_en)
-    
-        detected_info.append((name_en, name_vi, conf))
+            cls_id = int(b.cls[0])
+            conf = float(b.conf[0])
+        
+            name_en = yolo_model.names[cls_id]
+            name_vi = disease_vi.get(name_en, name_en)
+        
+            detected_info.append((name_en, name_vi, conf))
     
         st.warning("Phát hiện bệnh:")
 
