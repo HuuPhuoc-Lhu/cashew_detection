@@ -142,6 +142,7 @@ if uploaded_file and yolo_model:
             name_vi = disease_vi.get(name_en, name_en)
         
             detected_info.append((name_en, name_vi, conf))
+            detected = [vi for _, vi, _ in detected_info]
     
         st.warning("Phát hiện bệnh:")
 
