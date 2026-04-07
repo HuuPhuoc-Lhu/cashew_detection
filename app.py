@@ -97,6 +97,13 @@ conf_thres = 0.65
 
 # ================== LOAD MODEL ==================
 yolo_model = load_model()
+#=======dich lai sang tieng viet =============
+disease_vi = {
+    "leaf miner": "Sâu vẽ bùa",
+    "anthracnose": "Bệnh thán thư",
+    "powdery mildew": "Bệnh phấn trắng",
+    "healthy": "Lá khỏe mạnh"
+}
 
 # ================== UPLOAD ==================
 uploaded_file = st.file_uploader("📤 Tải ảnh lá điều", type=["jpg","jpeg","png"])
@@ -125,11 +132,21 @@ if uploaded_file and yolo_model:
         st.divider()
         st.subheader("📝 Phân tích & Tư vấn")
 
-        detected = list(set([
-            yolo_model.names[int(b.cls[0])] for b in boxes
-        ]))
+       detected_info = []
 
-        st.warning(f"Phát hiện: **{', '.join(detected)}**")
+        for b in boxes:
+        cls_id = int(b.cls[0])
+        conf = float(b.conf[0])
+    
+        name_en = yolo_model.names[cls_id]
+        name_vi = disease_vi.get(name_en, name_en)
+    
+        detected_info.append((name_en, name_vi, conf))
+    
+        st.warning("Phát hiện bệnh:")
+
+        for en, vi, conf in detected_info:
+            st.markdown(f"- 🦠 **{vi}** ({en}) → Độ tin cậy: **{conf*100:.1f}%**")
 
         # ===== GEMINI =====
         if st.button("✨ Nhận tư vấn AI"):
@@ -165,7 +182,7 @@ if uploaded_file and yolo_model:
 
                 save_log(
                     user="guest",
-                    diseases=detected,
+                    diseases=[f"{vi} ({conf*100:.1f}%)" for _, vi, conf in detected_info],
                     image_url=image_url
                 )
 
