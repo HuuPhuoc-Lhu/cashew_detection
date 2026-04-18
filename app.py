@@ -10,6 +10,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import hashlib
 import re
 import os
+from datetime import datetime
+import pytz
 
 # ================== CONFIG PAGE ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
@@ -80,7 +82,7 @@ def register_user(username, password):
             hash_password(password),
             "user",
             "active",
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            datetime.now(pytz.timezone("Asia/Ho_Chi_Minh")).strftime("%Y-%m-%d %H:%M:%S"),
         ])
         return True, "Đăng ký thành công"
     except Exception as e:
@@ -428,7 +430,7 @@ def show_app():
         )
 
     def upload_to_cloudinary(image_np, user="guest"):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(pytz.timezone("Asia/Ho_Chi_Minh")).strftime("%Y-%m-%d %H:%M:%S")
         temp_path = f"temp_{timestamp}.jpg"
         try:
             Image.fromarray(image_np).save(temp_path)
