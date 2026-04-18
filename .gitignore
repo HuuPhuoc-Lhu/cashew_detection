@@ -7,4 +7,5 @@ valid/
 test/
 *.pt
 *.txt" > .gitignore
-.env    
+.env    .streamlit/
+hash.py
