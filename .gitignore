@@ -9,3 +9,9 @@ test/
 *.txt" > .gitignore
 .env    .streamlit/
 hash.py
+.env
+credentials.json
+.streamlit/secrets.toml
+*.pyc
+__pycache__/
+venv/
