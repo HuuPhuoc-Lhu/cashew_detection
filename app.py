@@ -15,7 +15,13 @@ import pytz
 
 # ================== CONFIG PAGE ==================
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
-
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
 # ================== HELPER ==================
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
