@@ -520,13 +520,13 @@ def show_app():
                         if GEMINI_OK:
                             try:
                                 prompt = f"""
-Bạn là chuyên gia nông nghiệp.
-Cây điều bị: {', '.join(sick_only)}
-1. Nguyên nhân
-2. Cách xử lý
-3. Phòng ngừa
-Trả lời ngắn gọn dạng bullet.
-"""
+                                            Bạn là chuyên gia nông nghiệp.
+                                            Cây điều bị: {', '.join(sick_only)}
+                                            1. Nguyên nhân
+                                            2. Cách xử lý
+                                            3. Phòng ngừa
+                                            Trả lời ngắn gọn dạng bullet.
+                                            """
                                 response = gemini_model.generate_content(prompt)
                                 treatment_text = response.text
                                 st.session_state["last_treatment"] = treatment_text
