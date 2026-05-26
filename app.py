@@ -19,8 +19,6 @@ st.markdown("""
     <style>
         header {visibility: hidden;}
         footer {visibility: hidden;}
-        [data-testid="stToolbar"] {visibility: hidden;}
-        [data-testid="manage-app-button"] {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 # ================== HELPER ==================
