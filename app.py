@@ -17,7 +17,6 @@ import pytz
 st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
 st.markdown("""
     <style>
-        #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
         footer {visibility: hidden;}
         [data-testid="stToolbar"] {visibility: hidden;}
