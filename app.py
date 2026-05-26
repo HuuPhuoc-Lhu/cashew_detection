@@ -412,9 +412,8 @@ def show_app():
 
     disease_vi = {
         "leaf miner":     "Sâu vẽ bùa",
-        "anthracnose":    "Bệnh thán thư",
-        "powdery mildew": "Bệnh phấn trắng",
-        "healthy":        "Lá khỏe mạnh"
+        "red rust":    "Bệnh rỉ đỏ",
+        "healthy":       "Lá khỏe mạnh"
     }
 
     def generate_fallback(diseases):
