@@ -14,7 +14,7 @@ from datetime import datetime
 import pytz
 
 # ================== CONFIG PAGE ==================
-st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide"
+st.set_page_config(page_title="Cashew Leaf Disease Detection", layout="wide")
 # ================== HELPER ==================
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
